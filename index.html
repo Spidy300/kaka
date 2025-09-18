@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asta - Watch Anime Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 30px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffcc, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus {
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(45deg, #00ffcc, #00ccff);
+            border: none;
+        }
+
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 5px;
+            height: 25px;
+            background: linear-gradient(45deg, #00ffcc, #00ccff);
+            border-radius: 3px;
+        }
+
+        .anime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .anime-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .anime-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(0, 255, 204, 0.5);
+        }
+
+        .anime-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .anime-info {
+            padding: 12px;
+        }
+
+        .anime-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .anime-meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .rating {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .rating::before {
+            content: '⭐';
+        }
+
+        .episodes {
+            position: absolute;
+            bottom: 70px;
+            left: 10px;
+            background: rgba(0, 204, 255, 0.9);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #00ffcc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            max-width: 1000px;
+            margin: 50px auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-header {
+            position: relative;
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 150px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-title {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .modal-description {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .modal-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .watch-button {
+            background: linear-gradient(45deg, #00ffcc, #00ccff);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .watch-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .search-container {
+                width: 100%;
+                margin: 0;
+            }
+
+            .anime-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 15px;
+            }
+
+            .modal-content {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo" onclick="loadHomePage()">🎬 Asta</div>
+            <div class="search-container">
+                <input type="text" class="search-box" id="searchBox" placeholder="Search anime...">
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showSection('trending')">Trending</button>
+                <button class="nav-btn" onclick="showSection('popular')">Popular</button>
+                <button class="nav-btn" onclick="showSection('top')">Top Rated</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="trending-section">
+            <h2 class="section-title">🔥 Trending Now</h2>
+            <div class="anime-grid" id="trending-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading trending anime...
+                </div>
+            </div>
+        </div>
+
+        <div id="popular-section" style="display: none;">
+            <h2 class="section-title">⭐ Most Popular</h2>
+            <div class="anime-grid" id="popular-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading popular anime...
+                </div>
+            </div>
+        </div>
+
+        <div id="top-section" style="display: none;">
+            <h2 class="section-title">👑 Top Rated</h2>
+            <div class="anime-grid" id="top-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading top rated anime...
+                </div>
+            </div>
+        </div>
+
+        <div id="search-section" style="display: none;">
+            <h2 class="section-title">🔍 Search Results</h2>
+            <div class="anime-grid" id="search-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Searching...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="animeModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="modalDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        // AniList API queries
+        const ANILIST_API = 'https://graphql.anilist.co';
+        
+        const animeQuery = `
+            query ($page: Int, $perPage: Int, $sort: [MediaSort], $search: String, $type: MediaType) {
+                Page(page: $page, perPage: $perPage) {
+                    media(sort: $sort, search: $search, type: $type) {
+                        id
+                        title {
+                            romaji
+                            english
+                        }
+                        coverImage {
+                            large
+                            extraLarge
+                        }
+                        bannerImage
+                        description
+                        episodes
+                        status
+                        averageScore
+                        genres
+                        season
+                        seasonYear
+                        format
+                        duration
+                        studios {
+                            nodes {
+                                name
+                            }
+                        }
+                    }
+                }
+            }
+        `;
+
+        let currentSection = 'trending';
+        let animeCache = {};
+
+        // Fetch anime data from AniList
+        async function fetchAnime(sort, search = null) {
+            const variables = {
+                page: 1,
+                perPage: 20,
+                sort: sort,
+                type: 'ANIME'
+            };
+
+            if (search) {
+                variables.search = search;
+            }
+
+            try {
+                const response = await fetch(ANILIST_API, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: animeQuery,
+                        variables: variables
+                    })
+                });
+
+                const data = await response.json();
+                return data.data.Page.media;
+            } catch (error) {
+                console.error('Error fetching anime:', error);
+                return [];
+            }
+        }
+
+        // Create anime card HTML
+        function createAnimeCard(anime) {
+            const title = anime.title.english || anime.title.romaji;
+            const score = anime.averageScore ? (anime.averageScore / 10).toFixed(1) : 'N/A';
+            const episodes = anime.episodes || '?';
+            
+            // Store anime data for modal
+            animeCache[anime.id] = anime;
+
+            return `
+                <div class="anime-card" onclick="openModal(${anime.id})">
+                    <img src="${anime.coverImage.large}" alt="${title}" loading="lazy">
+                    ${anime.averageScore ? `<div class="rating">${score}</div>` : ''}
+                    ${anime.episodes ? `<div class="episodes">EP ${episodes}</div>` : ''}
+                    <div class="anime-info">
+                        <div class="anime-title">${title}</div>
+                        <div class="anime-meta">${anime.format || 'TV'} • ${anime.status}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load anime grid
+        async function loadAnimeGrid(gridId, sort) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+            
+            const animeList = await fetchAnime(sort);
+            
+            if (animeList.length > 0) {
+                grid.innerHTML = animeList.map(anime => createAnimeCard(anime)).join('');
+            } else {
+                grid.innerHTML = '<div class="loading">No anime found</div>';
+            }
+        }
+
+        // Show section
+        function showSection(section) {
+            // Hide all sections
+            document.getElementById('trending-section').style.display = 'none';
+            document.getElementById('popular-section').style.display = 'none';
+            document.getElementById('top-section').style.display = 'none';
+            document.getElementById('search-section').style.display = 'none';
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show selected section
+            document.getElementById(`${section}-section`).style.display = 'block';
+            currentSection = section;
+            
+            // Load data if not already loaded
+            const gridId = `${section}-grid`;
+            const grid = document.getElementById(gridId);
+            
+            if (grid.querySelector('.loading')) {
+                let sort;
+                switch(section) {
+                    case 'trending':
+                        sort = ['TRENDING_DESC', 'POPULARITY_DESC'];
+                        break;
+                    case 'popular':
+                        sort = ['POPULARITY_DESC'];
+                        break;
+                    case 'top':
+                        sort = ['SCORE_DESC'];
+                        break;
+                }
+                loadAnimeGrid(gridId, sort);
+            }
+        }
+
+        // Open modal
+        function openModal(animeId) {
+            const anime = animeCache[animeId];
+            const modal = document.getElementById('animeModal');
+            const modalDetails = document.getElementById('modalDetails');
+            
+            const title = anime.title.english || anime.title.romaji;
+            const description = anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'No description available.';
+            const studios = anime.studios.nodes.map(s => s.name).join(', ') || 'Unknown';
+            
+            modalDetails.innerHTML = `
+                <div class="modal-header" style="background-image: url('${anime.bannerImage || anime.coverImage.extraLarge}')">
+                </div>
+                <div class="modal-body">
+                    <h1 class="modal-title">${title}</h1>
+                    <div class="modal-info">
+                        <div class="info-item">
+                            <div class="info-label">Format</div>
+                            <div class="info-value">${anime.format || 'TV'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Episodes</div>
+                            <div class="info-value">${anime.episodes || 'Ongoing'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">${anime.status}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Score</div>
+                            <div class="info-value">${anime.averageScore ? (anime.averageScore / 10).toFixed(1) + '/10' : 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Season</div>
+                            <div class="info-value">${anime.season || 'Unknown'} ${anime.seasonYear || ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Duration</div>
+                            <div class="info-value">${anime.duration ? anime.duration + ' min' : 'Unknown'}</div>
+                        </div>
+                    </div>
+                    <div class="modal-description">${description}</div>
+                    <div class="info-item">
+                        <div class="info-label">Genres</div>
+                        <div class="info-value">${anime.genres.join(', ')}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Studios</div>
+                        <div class="info-value">${studios}</div>
+                    </div>
+                    <button class="watch-button" onclick="alert('To watch this anime, please visit official streaming platforms like Crunchyroll, Funimation, or Netflix. This is a demo application for educational purposes only.')">
+                        Watch Now
+                    </button>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('animeModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Search functionality
+        let searchTimeout;
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length > 2) {
+                searchTimeout = setTimeout(async () => {
+                    // Hide all sections and show search section
+                    document.getElementById('trending-section').style.display = 'none';
+                    document.getElementById('popular-section').style.display = 'none';
+                    document.getElementById('top-section').style.display = 'none';
+                    document.getElementById('search-section').style.display = 'block';
+                    
+                    // Remove active class from all nav buttons
+                    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                    
+                    // Load search results
+                    const searchGrid = document.getElementById('search-grid');
+                    searchGrid.innerHTML = '<div class="loading"><div class="spinner"></div>Searching...</div>';
+                    
+                    const results = await fetchAnime(['POPULARITY_DESC'], query);
+                    
+                    if (results.length > 0) {
+                        searchGrid.innerHTML = results.map(anime => createAnimeCard(anime)).join('');
+                    } else {
+                        searchGrid.innerHTML = '<div class="loading">No results found for "' + query + '"</div>';
+                    }
+                }, 500);
+            } else if (query.length === 0) {
+                // Return to previous section
+                document.getElementById('search-section').style.display = 'none';
+                document.getElementById(`${currentSection}-section`).style.display = 'block';
+                document.querySelector(`.nav-btn:nth-child(${currentSection === 'trending' ? 1 : currentSection === 'popular' ? 2 : 3})`).classList.add('active');
+            }
+        });
+
+        // Load home page
+        function loadHomePage() {
+            document.getElementById('searchBox').value = '';
+            document.getElementById('search-section').style.display = 'none';
+            showSection('trending');
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('animeModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Initial load
+        loadAnimeGrid('trending-grid', ['TRENDING_DESC', 'POPULARITY_DESC']);
+    </script>
+</body>
+</html>
